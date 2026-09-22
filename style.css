@@ -108,15 +108,17 @@ section { padding: 2.5rem 0 0.5rem; scroll-margin-top: 60px; }
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 1rem 1.1rem;
 }
-.area-head { display: flex; gap: 0.9rem; align-items: center; }
-.flag { height: 28px; width: auto; border-radius: 3px; box-shadow: 0 0 0 1px var(--line); flex: none; }
-.area-name { font-weight: 700; }
-.area-map { width: 100%; height: auto; max-height: 220px; }
+.area-head { display: flex; gap: 0.9rem; align-items: flex-start; min-height: 4.1rem; } /* room for a 2-line name */
+.flag-slot { flex: none; margin-top: 2px; line-height: 0; }
+.flag { width: 40px; height: 30px; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); } /* 4:3 like emoji flags */
+.area-name { font-weight: 700; line-height: 1.3; }
+.area-map-wrap { height: 200px; display: flex; align-items: center; justify-content: center; }
+.area-map { width: 100%; height: 100%; }
 .area-map .region { fill: var(--line); stroke: var(--muted); stroke-width: 0.6; stroke-linejoin: round; }
 .area-map .mine { fill: var(--accent); fill-opacity: 0.9; stroke: none; }
 .area-map .mine-outline { fill: none; stroke: var(--accent-ink); stroke-width: 1; stroke-dasharray: 3 2; stroke-linejoin: round; }
-.area-stat { font-size: 0.875rem; color: var(--muted); }
-.area-stat strong { color: var(--text); }
+.area-stat { margin-top: auto; }
+.area-km { font-size: 1.35rem; font-weight: 700; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
 
 /* Filters */
 .filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 1.25rem; }

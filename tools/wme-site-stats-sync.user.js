@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Site Stats Sync
 // @namespace    https://github.com/DeviateFromThePlan
-// @version      2.0.0
+// @version      2.1.0
 // @description  Saves your WME stats (edits, points, forum posts, daily edits) to a public GitHub Gist that your site reads.
 // @author       DeviateFromThePlan
 // @match        https://www.waze.com/editor*
@@ -121,7 +121,8 @@
     const stats = {
       edits: full?.edits ?? profile.totalEditCount ?? profile.editCount,
       points: full?.points ?? null,
-      rank: profile.rank != null ? profile.rank + 1 : null,
+      // Editor level (1–6). The profile's rank is 0-based (Level 3 = 2).
+      rank: full?.rank != null ? full.rank + 1 : (profile.rank != null ? profile.rank + 1 : null),
       forumPosts: full?.forumPosts ?? await getForumPosts(userName),
       editsLast30Days: daily.slice(-30).reduce((a, b) => a + b, 0),
       dailyEdits: daily,

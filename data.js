@@ -12,8 +12,9 @@ window.SITE = {
   joined: "2023-06-25",
 
   // Short bio shown under the header. Each string is a paragraph.
+  // {level} and {edits} are filled in from your live stats ({edits} reads like "75,000").
   bio: [
-    "I’m Edward, a Level 3 Waze map editor with Waze Australia. I started editing in June 2023 and have made over 75,000 edits since.",
+    "I’m Edward, a Level {level} Waze map editor with Waze Australia. I started editing in June 2023 and have made over {edits} edits since.",
     "I’m Area Manager for Southern Queensland, and through map raids I’ve also taken on Eastern Papua New Guinea and Western Ethiopia. When I’m not editing I write userscripts that make WME editing quicker.",
   ],
 

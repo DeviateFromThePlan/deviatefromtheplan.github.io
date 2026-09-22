@@ -17,8 +17,15 @@
   };
   document.querySelectorAll("[data-bind]").forEach((el) => { el.textContent = binds[el.dataset.bind]; });
 
-  // Bio
-  $("bio").innerHTML = S.bio.map((p) => `<p>${esc(p)}</p>`).join("");
+  // Bio, with {level} and {edits} filled from the current stats.
+  // Edits round down to a clean "over" figure: to 5,000 from 10,000 up, 1,000 from 1,000 up, else 100.
+  function renderBio(level, edits) {
+    const step = edits >= 10000 ? 5000 : edits >= 1000 ? 1000 : 100;
+    const rounded = (Math.floor(edits / step) * step).toLocaleString("en-AU");
+    $("bio").innerHTML = S.bio.map((p) => `<p>${esc(p.replace(/{level}/g, level).replace(/{edits}/g, rounded))}</p>`).join("");
+    document.querySelectorAll('[data-bind="level"]').forEach((el) => { el.textContent = level; });
+  }
+  renderBio(S.level, S.stats.edits);
 
   // Stats. Live values from the gist (see below) override data.js.
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -81,6 +88,7 @@
       if (typeof j.edits !== "number") throw 0;
       const num = (v, fallback) => (typeof v === "number" ? v : fallback);
       renderStats(j.edits, num(j.points, S.stats.points), num(j.forumPosts, S.stats.forumPosts), new Date(j.updated), true);
+      renderBio(num(j.rank, S.level), j.edits);
       if (Array.isArray(j.dailyEdits) && j.dailyEdits.length) renderActivity(j.dailyEdits, new Date(j.updated));
     })
     .catch(() => renderStats(S.stats.edits, S.stats.points, S.stats.forumPosts, parse(S.statsAsOf), false));
@@ -134,21 +142,21 @@
         if (inRings(pt, mine)) { inMine++; if (inRings(pt, region)) inBoth++; }
       }
       const km = ringsAreaKm2(mine) * (inMine ? inBoth / inMine : 0), total = ringsAreaKm2(region);
-      stat = `<div class="area-stat"><strong>${(Math.round(km / 100) * 100).toLocaleString("en-AU")} km²</strong> of land · ${(km / total * 100).toFixed(0)}% of ${esc(a.regionName)}</div>`;
+      stat = `<div class="area-stat"><div class="area-km">${(Math.round(km / 100) * 100).toLocaleString("en-AU")} km²</div><div class="muted small">of land · ${(km / total * 100).toFixed(0)}% of ${esc(a.regionName)}</div></div>`;
     }
-    return `<svg class="area-map" viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of ${esc(a.regionName)}${mine ? ` with ${esc(a.name)} highlighted` : ""}">
+    return `<div class="area-map-wrap"><svg class="area-map" viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of ${esc(a.regionName)}${mine ? ` with ${esc(a.name)} highlighted` : ""}">
         <defs><clipPath id="${clipId}"><path d="${path(region)}"/></clipPath></defs>
         <path class="region" d="${path(region)}"/>
         ${mine ? `<path class="mine" clip-path="url(#${clipId})" d="${path(mine)}"/><path class="mine-outline" d="${path(mine)}"/>` : ""}
-      </svg>${stat}`;
+      </svg></div>${stat}`;
   }
   $("areas-list").innerHTML = S.areas.map((a) => `
     <div class="area">
       <div class="area-head">
-        <img class="flag" src="${esc(a.flag)}" alt="${esc(a.country)} flag">
+        <span class="flag-slot"><img class="flag" src="${esc(a.flag)}" alt="${esc(a.country)} flag"></span>
         <div>
           <div class="area-name">${esc(a.name)}</div>
-          <div class="muted small">${esc(a.country)} · since ${fmt(a.since, { month: "short", year: "numeric" })}</div>
+          <div class="muted small">Since ${fmt(a.since, { month: "short", year: "numeric" })}</div>
         </div>
       </div>
       ${areaMap(a)}
