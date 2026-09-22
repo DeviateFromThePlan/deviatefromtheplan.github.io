@@ -42,6 +42,16 @@ window.SITE = {
     { label: "deviatefromtheplan.waze@gmail.com", url: "mailto:deviatefromtheplan.waze@gmail.com" },
   ],
 
+  // "Through the lens" gallery. Images live in assets/photos/ (1600px, 3:2).
+  photos: [
+    { src: "assets/photos/straight-only.jpg", title: "Straight only", caption: "Lane arrows and turn restrictions like this are set on the map in WME." },
+    { src: "assets/photos/m7-ipswich-motorway.jpg", title: "M7 Ipswich Motorway", caption: "Route shields on the map come from real-world signs like this one." },
+    { src: "assets/photos/brisbane-river-cbd.jpg", title: "Brisbane River and CBD", caption: "A trip down the range from Toowoomba, where I edit from." },
+    { src: "assets/photos/river-high-rises.jpg", title: "On the Brisbane River", caption: "Riverside high-rises, taken from the water." },
+    { src: "assets/photos/customs-house.jpg", title: "Customs House", caption: "Heritage-listed, on the Brisbane River." },
+    { src: "assets/photos/treasury-building.jpg", title: "Old Treasury Building", caption: "Brisbane CBD." },
+  ],
+
   // WME userscripts
   scripts: [
     {

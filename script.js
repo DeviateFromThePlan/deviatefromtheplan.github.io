@@ -211,6 +211,13 @@
         `<li class="badge">${b.img ? `<img src="${esc(b.img)}" alt="" loading="lazy">` : ""}<span>${esc(b.name)}</span></li>`).join("")}</ul>
     </div>`).join("");
 
+  // Photo gallery; each photo opens full size in a new tab.
+  $("gallery").innerHTML = (S.photos || []).map((p) => `
+    <figure class="photo">
+      <a href="${esc(p.src)}" target="_blank" rel="noopener"><img src="${esc(p.src)}" alt="${esc(p.title)}" loading="lazy"></a>
+      <figcaption><strong>${esc(p.title)}</strong><span class="muted">${esc(p.caption)}</span></figcaption>
+    </figure>`).join("");
+
   // Links
   $("links-list").innerHTML = S.links.map((l) => l.url
     ? (l.url.startsWith("mailto:")
