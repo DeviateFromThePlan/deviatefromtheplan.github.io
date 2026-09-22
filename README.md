@@ -17,12 +17,12 @@ This goes in the `deviatefromtheplan.github.io` repo, so it is served at https:/
 
 No build step, no dependencies.
 
-## Live edit count
+## Live stats
 
-Waze only returns profile data to signed-in users, so the count is pushed from WME rather than pulled.
+Waze only returns profile data to signed-in users, so stats are pushed from WME rather than pulled. The userscript saves them to a public GitHub Gist (`waze-site-stats.json`), and the site finds it in the public gists of `githubUser` (set in `data.js`). No commits to this repo, no Pages rebuilds.
 
 1. Install `tools/wme-site-stats-sync.user.js` in Tampermonkey.
-2. Create a fine-grained GitHub token: **Only select repositories** → `deviatefromtheplan.github.io`, permission **Contents: Read and write**. Nothing else.
-3. In WME, open the Tampermonkey menu → **Set GitHub token**, and paste it.
+2. Create a fine-grained GitHub token: under **Account permissions**, set **Gists** to **Read and write**. Nothing else; no repository access needed.
+3. In WME, open the Tampermonkey menu → **Set GitHub token**, paste it, then **Push stats now**. The first push creates the gist (**Show gist link** opens it).
 
-From then on, opening WME (and saving edits) updates `stats.json` in the repo, at most every 3 hours. Use **Push stats now** in the menu to force an update. Until the first push, the site falls back to the numbers in `data.js`.
+After that, opening WME and saving edits updates the gist (at most every 3 hours, and only when something changed). GitHub caches the gist for up to 5 minutes. Until the first push, the site shows the fallback numbers in `data.js`.

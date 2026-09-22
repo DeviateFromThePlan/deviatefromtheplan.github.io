@@ -6,6 +6,7 @@
 window.SITE = {
   username: "DeviateFromThePlan",
   realName: "Edward",
+  githubUser: "DeviateFromThePlan", // live stats are read from this account's public gists
   team: "Waze Australia",
   level: 3,
   joined: "2023-06-25",
@@ -16,7 +17,7 @@ window.SITE = {
     "I’m Area Manager for Southern Queensland, and through map raids I’ve also taken on Eastern Papua New Guinea and Western Ethiopia. When I’m not editing I write userscripts that make WME editing quicker.",
   ],
 
-  // Stats snapshot (update whenever you like)
+  // Fallback stats, shown until the WME userscript has pushed live stats to a gist
   statsAsOf: "2026-09-22",
   stats: {
     points: 234862,

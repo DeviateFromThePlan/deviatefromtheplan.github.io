@@ -109,7 +109,7 @@ section { padding: 2.5rem 0 0.5rem; scroll-margin-top: 60px; }
   padding: 1rem 1.1rem;
 }
 .area-head { display: flex; gap: 0.9rem; align-items: center; }
-.flag { width: 44px; height: 30px; object-fit: cover; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); flex: none; }
+.flag { height: 28px; width: auto; border-radius: 3px; box-shadow: 0 0 0 1px var(--line); flex: none; }
 .area-name { font-weight: 700; }
 .area-map { width: 100%; height: auto; max-height: 220px; }
 .area-map .region { fill: var(--line); stroke: var(--muted); stroke-width: 0.6; stroke-linejoin: round; }

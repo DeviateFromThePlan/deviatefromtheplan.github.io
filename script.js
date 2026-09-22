@@ -20,7 +20,7 @@
   // Bio
   $("bio").innerHTML = S.bio.map((p) => `<p>${esc(p)}</p>`).join("");
 
-  // Stats. stats.json (pushed from WME by tools/wme-site-stats-sync.user.js) overrides data.js.
+  // Stats. Live values from the gist (see below) override data.js.
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   function renderStats(edits, points, posts, asOf, live) {
     const days = Math.max(1, (asOf - parse(S.joined)) / 86400000);
@@ -50,7 +50,7 @@
     });
   }
 
-  // Daily edits bar chart (last entry = the day stats.json was pushed).
+  // Daily edits bar chart (last entry = the day the stats were pushed).
   function renderActivity(daily, end) {
     const max = Math.max(1, ...daily);
     const total = daily.reduce((a, b) => a + b, 0);
@@ -68,8 +68,15 @@
     $("activity").hidden = false;
   }
 
-  fetch("stats.json", { cache: "no-store" })
+  // Live stats live in a public gist written by tools/wme-site-stats-sync.user.js.
+  // Find it by file name in the user's public gists; its raw_url points at the latest revision.
+  const STATS_FILE = "waze-site-stats.json";
+  fetch(`https://api.github.com/users/${encodeURIComponent(S.githubUser)}/gists?per_page=100`)
     .then((r) => (r.ok ? r.json() : Promise.reject()))
+    .then((gists) => {
+      const f = gists.map((g) => g.files[STATS_FILE]).find(Boolean);
+      return f ? fetch(f.raw_url).then((r) => (r.ok ? r.json() : Promise.reject())) : Promise.reject();
+    })
     .then((j) => {
       if (typeof j.edits !== "number") throw 0;
       const num = (v, fallback) => (typeof v === "number" ? v : fallback);

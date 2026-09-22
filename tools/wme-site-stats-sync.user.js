@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         WME Site Stats Sync
 // @namespace    https://github.com/DeviateFromThePlan
-// @version      1.3.0
-// @description  Pushes your WME edit count to stats.json in your GitHub Pages repo, so your site stays up to date.
+// @version      2.0.0
+// @description  Saves your WME stats (edits, points, forum posts, daily edits) to a public GitHub Gist that your site reads.
 // @author       DeviateFromThePlan
 // @match        https://www.waze.com/editor*
 // @match        https://www.waze.com/*/editor*
@@ -20,18 +20,22 @@
 (function () {
   'use strict';
 
-  const REPO = 'DeviateFromThePlan/deviatefromtheplan.github.io';
-  const FILE = 'stats.json';
+  // The site finds the gist by this file name, so keep it in sync with script.js.
+  const FILE = 'waze-site-stats.json';
   const MIN_HOURS_BETWEEN_PUSHES = 3;
   const TAG = '[Site Stats Sync]';
 
   GM_registerMenuCommand('Set GitHub token', () => {
-    const t = prompt('Fine-grained GitHub token with Contents: read & write on ' + REPO + ' only.\nLeave blank to clear.', '');
+    const t = prompt('Fine-grained GitHub token with only the account permission "Gists: Read and write".\nLeave blank to clear.', '');
     if (t === null) return;
     GM_setValue('token', t.trim());
     alert(t.trim() ? 'Token saved.' : 'Token cleared.');
   });
   GM_registerMenuCommand('Push stats now', () => sync(true));
+  GM_registerMenuCommand('Show gist link', () => {
+    const id = GM_getValue('gistId', '');
+    alert(id ? 'https://gist.github.com/' + id : 'No gist yet. It is created on the first push.');
+  });
 
   let sdk;
   const w = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
@@ -56,13 +60,15 @@
           'Content-Type': 'application/json',
         },
         data: body ? JSON.stringify(body) : undefined,
-        onload: (r) => resolve({ status: r.status, json: r.responseText ? JSON.parse(r.responseText) : null }),
+        onload: (r) => {
+          let json = null;
+          try { json = r.responseText ? JSON.parse(r.responseText) : null; } catch (e) { /* non-JSON error page */ }
+          resolve({ status: r.status, json });
+        },
         onerror: reject,
       });
     });
   }
-
-  const b64 = (s) => btoa(unescape(encodeURIComponent(s)));
 
   // Same request the editor profile page makes: ask the default server, then re-ask the
   // server you last edited on (row / il) so the numbers match your profile page.
@@ -126,26 +132,33 @@
       return;
     }
 
-    const path = `/repos/${REPO}/contents/${FILE}`;
-    const cur = await gh('GET', path);
-    const sha = cur.status === 200 ? cur.json.sha : undefined;
-    if (!force && cur.status === 200) {
-      try {
-        const prev = JSON.parse(decodeURIComponent(escape(atob(cur.json.content.replace(/\n/g, '')))));
-        if (prev.edits === stats.edits && prev.points === stats.points && prev.forumPosts === stats.forumPosts
-            && prev.updated?.slice(0, 10) === stats.updated.slice(0, 10)) {
-          GM_setValue('lastPush', Date.now());
-          return;
-        }
-      } catch (e) { /* fall through and overwrite */ }
+    const content = JSON.stringify(stats, null, 2) + '\n';
+    let gistId = GM_getValue('gistId', '');
+
+    if (gistId) {
+      const cur = await gh('GET', `/gists/${gistId}`);
+      if (cur.status === 404) {
+        gistId = ''; // deleted on GitHub; a new one is created below
+      } else if (!force && cur.status === 200) {
+        try {
+          const prev = JSON.parse(cur.json.files[FILE].content);
+          if (prev.edits === stats.edits && prev.points === stats.points && prev.forumPosts === stats.forumPosts
+              && prev.updated?.slice(0, 10) === stats.updated.slice(0, 10)) {
+            GM_setValue('lastPush', Date.now());
+            return;
+          }
+        } catch (e) { /* fall through and overwrite */ }
+      }
     }
 
-    const res = await gh('PUT', path, {
-      message: `Update stats: ${stats.edits.toLocaleString('en-AU')} edits`,
-      content: b64(JSON.stringify(stats, null, 2) + '\n'),
-      sha,
-    });
+    const res = gistId
+      ? await gh('PATCH', `/gists/${gistId}`, { files: { [FILE]: { content } } })
+      : await gh('POST', '/gists', { description: 'Waze editing stats for my site', public: true, files: { [FILE]: { content } } });
     if (res.status === 200 || res.status === 201) {
+      if (!gistId) {
+        GM_setValue('gistId', res.json.id);
+        console.info(TAG, 'Created gist', res.json.html_url);
+      }
       GM_setValue('lastPush', Date.now());
       console.info(TAG, 'Pushed', stats);
     } else {
