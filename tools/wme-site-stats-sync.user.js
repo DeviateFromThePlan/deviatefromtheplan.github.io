@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Site Stats Sync
 // @namespace    https://github.com/DeviateFromThePlan
-// @version      2.1.0
+// @version      2.2.0
 // @description  Saves your WME stats (edits, points, forum posts, daily edits) to a public GitHub Gist that your site reads.
 // @author       DeviateFromThePlan
 // @match        https://www.waze.com/editor*
@@ -14,6 +14,8 @@
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
 // @connect      api.github.com
+// @downloadURL  https://deviatefromtheplan.github.io/tools/wme-site-stats-sync.user.js
+// @updateURL    https://deviatefromtheplan.github.io/tools/wme-site-stats-sync.user.js
 // ==/UserScript==
 
 /* global getWmeSdk, SDK_INITIALIZED */
@@ -135,6 +137,17 @@
 
     const content = JSON.stringify(stats, null, 2) + '\n';
     let gistId = GM_getValue('gistId', '');
+
+    // New computer: reuse the existing stats gist instead of creating a second one.
+    if (!gistId) {
+      const mine = await gh('GET', '/gists?per_page=100');
+      const found = mine.status === 200 && mine.json.find((g) => g.files && g.files[FILE]);
+      if (found) {
+        gistId = found.id;
+        GM_setValue('gistId', gistId);
+        console.info(TAG, 'Found existing gist', found.html_url);
+      }
+    }
 
     if (gistId) {
       const cur = await gh('GET', `/gists/${gistId}`);

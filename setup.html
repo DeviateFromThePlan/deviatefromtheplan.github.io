@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Restore My Setup · DeviateFromThePlan</title>
+  <meta name="description" content="Step-by-step restore of my Waze Map Editor setup on a new computer: extensions, userscripts and settings.">
+  <link rel="icon" href="assets/avatar.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="setup-head">
+    <div class="wrap">
+      <a class="back" href="./">← Back to profile</a>
+      <h1>Restore my setup</h1>
+      <p>Everything I need to get WME back to how I like it on a new computer. Work through the steps in order.</p>
+    </div>
+  </header>
+
+  <main class="wrap setup">
+    <section class="step">
+      <h2><span class="step-no">1</span> Install the extensions</h2>
+      <div class="tiles">
+        <div class="tile">
+          <strong>Tampermonkey</strong>
+          <span class="muted small">Runs the userscripts.</span>
+          <div class="tile-links">
+            <a class="btn" href="https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo" target="_blank" rel="noopener">Chrome</a>
+            <a class="btn btn-ghost" href="https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd" target="_blank" rel="noopener">Edge</a>
+            <a class="btn btn-ghost" href="https://addons.mozilla.org/firefox/addon/tampermonkey/" target="_blank" rel="noopener">Firefox</a>
+          </div>
+        </div>
+        <div class="tile">
+          <strong>WME Toolbox</strong>
+          <span class="muted small">Browser extension, updates itself. Its options and shortcuts come back with my settings in step 4.</span>
+          <div class="tile-links">
+            <a class="btn" href="https://chromewebstore.google.com/detail/wme-toolbox/ihebciailciabdiknfomleeccodkdejn" target="_blank" rel="noopener">Chrome</a>
+            <a class="btn btn-ghost" href="https://www.waze.com/wiki/USA/Scripts/WME_Toolbox" target="_blank" rel="noopener">Other browsers</a>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <strong>Chrome only:</strong> after installing Tampermonkey, open <code>chrome://extensions</code>
+        <button class="copy" data-copy="chrome://extensions" type="button">Copy</button>,
+        click <em>Details</em> on Tampermonkey and turn on <em>Allow User Scripts</em>. Scripts won’t run without it.
+      </div>
+    </section>
+
+    <section class="step">
+      <h2><span class="step-no">2</span> Install the userscripts</h2>
+      <div class="tile fast">
+        <strong>Fastest: install everything at once</strong>
+        <ol class="small">
+          <li>Open the Tampermonkey dashboard → <em>Utilities</em>.</li>
+          <li>Under <em>Import from URL</em>, paste this link and click <em>Install</em>, then <em>Import</em>:
+            <div class="copy-row"><code id="bundle-url"></code><button class="copy" data-copy-from="bundle-url" type="button">Copy</button></div></li>
+          <li>Back on <em>Installed Userscripts</em>, tick the box at the top to select all, choose <em>Trigger update</em> and click <em>Start</em>, so every script jumps to its latest version.</li>
+        </ol>
+        <span class="muted small">Then install anything new from the list below that isn’t in the bundle yet.</span>
+      </div>
+      <p class="muted">Or one at a time: each link is the script’s own update address, so you always get the latest version. Tampermonkey opens an install page for each one: click <em>Install</em>, then come back here.</p>
+      <div class="installer">
+        <button class="btn btn-big" id="install-next" type="button">Install next script</button>
+        <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+        <span class="muted small" id="progress-text"></span>
+        <button class="linkish small" id="reset-progress" type="button">Reset</button>
+      </div>
+      <ol class="script-list" id="script-list"></ol>
+      <p class="muted small"><em>WME Send to Discord (Reloaded)</em> replaces the older <em>WME Send to Discord</em>: uninstall the old one first if it’s there.</p>
+    </section>
+
+    <section class="step">
+      <h2><span class="step-no">3</span> Open WME and sign in</h2>
+      <div class="tile-links">
+        <a class="btn" href="https://www.waze.com/en-AU/editor" target="_blank" rel="noopener">Open WME</a>
+        <a class="btn btn-ghost" href="https://www.waze.com/discuss/" target="_blank" rel="noopener">Waze forum</a>
+      </div>
+      <p class="muted small">Scripts that ask to connect to other sites (Google Sheets, Discord, GitHub): choose <em>Always allow</em> for that domain.</p>
+    </section>
+
+    <section class="step">
+      <h2><span class="step-no">4</span> Restore my WME settings</h2>
+      <p>In WME, open the <em>Scripts</em> tab → <strong>ESM</strong> (Easy Storage Manager). Connect <strong>Google Drive</strong> and import my latest backup,
+        or import a backup file. Pick the settings to bring back and WME reloads with them.</p>
+      <p class="muted small">Once Google Drive is connected, turn on ESM’s auto-save so there’s always a recent backup.
+        <a href="https://www.waze.com/discuss/t/340514" target="_blank" rel="noopener">ESM forum thread</a></p>
+    </section>
+
+    <section class="step">
+      <h2><span class="step-no">5</span> Reconnect site stats</h2>
+      <p>In WME, click the Tampermonkey icon → <em>WME Site Stats Sync</em> → <strong>Set GitHub token</strong>. Use a fine-grained token with only <em>Gists: Read and write</em>
+        (<a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">create one</a>). The script finds and keeps using the existing stats gist.</p>
+    </section>
+  </main>
+
+  <footer class="wrap footer">
+    <p>Unofficial personal page. Waze is a trademark of Google LLC; this site isn’t affiliated with Waze.</p>
+  </footer>
+
+  <script src="setup-data.js"></script>
+  <script src="setup.js"></script>
+</body>
+</html>

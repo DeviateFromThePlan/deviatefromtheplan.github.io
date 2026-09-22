@@ -207,6 +207,68 @@ section { padding: 2.5rem 0 0.5rem; scroll-margin-top: 60px; }
 .photo figcaption { padding: 0.7rem 0.9rem 0.85rem; display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.875rem; line-height: 1.4; }
 @media (prefers-reduced-motion: reduce) { .photo img { transition: none; } }
 
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; cursor: pointer;
+  font: inherit; font-weight: 500; font-size: 0.9rem; border-radius: 999px; padding: 0.45rem 1rem;
+  background: var(--accent); color: #06283a; border: 1px solid var(--accent);
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: 0.55; cursor: default; filter: none; }
+.btn-ghost { background: transparent; color: var(--text); border-color: var(--line); }
+.btn-ghost:hover { border-color: var(--accent); filter: none; }
+.btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
+.btn-big { padding: 0.7rem 1.3rem; font-size: 1rem; }
+.linkish { background: none; border: 0; color: var(--muted); cursor: pointer; text-decoration: underline; font: inherit; }
+
+/* Restore-setup link on the profile */
+.setup-cta {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  margin-top: 1rem; padding: 1rem 1.25rem; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius);
+}
+
+/* Restore-setup page */
+.setup-head { background: linear-gradient(135deg, var(--hero-a), var(--hero-b)); color: #fff; padding: 2rem 0 1.75rem; }
+.setup-head h1 { margin: 0.5rem 0 0.25rem; font-size: clamp(1.6rem, 5vw, 2.4rem); }
+.setup-head p { margin: 0; opacity: 0.9; max-width: 60ch; }
+.back { color: #fff; opacity: 0.85; text-decoration: none; font-size: 0.9rem; }
+.back:hover { opacity: 1; text-decoration: underline; }
+.step { padding-top: 2rem; }
+.step h2 { display: flex; align-items: center; gap: 0.6rem; }
+.step-no {
+  display: inline-grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  background: var(--accent); color: #06283a; font-size: 0.95rem; flex: none;
+}
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 0.75rem; }
+.tile {
+  display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem 1.1rem;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.tile-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.note {
+  margin-top: 12px; padding: 0.8rem 1rem; border-radius: var(--radius); font-size: 0.9rem;
+  border: 1px solid var(--promotion); background: color-mix(in srgb, var(--promotion) 10%, transparent);
+}
+code { font-size: 0.85em; padding: 0.1rem 0.35rem; border-radius: 4px; background: var(--line); }
+.copy { font: inherit; font-size: 0.75rem; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+.tile.fast { margin: 0.75rem 0 1rem; border-color: var(--accent); }
+.tile.fast ol { margin: 0.25rem 0 0.25rem 1.1rem; padding: 0; display: grid; gap: 0.4rem; }
+.copy-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem; flex-wrap: wrap; }
+.copy-row code { overflow-wrap: anywhere; }
+.installer { display: flex; align-items: center; gap: 0.75rem 1rem; flex-wrap: wrap; margin: 1rem 0; }
+.progress { flex: 1 1 160px; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.progress-bar { height: 100%; width: 0; background: var(--edits); transition: width 0.3s ease; }
+.script-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.script-row {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.9rem;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+}
+.script-row.done { opacity: 0.65; }
+.tick { width: 1.2rem; color: var(--edits); font-weight: 700; flex: none; text-align: center; }
+.script-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.script-info .small { overflow-wrap: anywhere; }
+
 /* Links */
 .links { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .links a, .links span {
