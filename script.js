@@ -213,6 +213,8 @@
 
   // Links
   $("links-list").innerHTML = S.links.map((l) => l.url
-    ? `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a></li>`
+    ? (l.url.startsWith("mailto:")
+      ? `<li><a href="${esc(l.url)}">✉ ${esc(l.label)}</a></li>`
+      : `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a></li>`)
     : `<li><span>${esc(l.label)}</span></li>`).join("");
 })();

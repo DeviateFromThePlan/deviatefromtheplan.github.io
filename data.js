@@ -39,6 +39,7 @@ window.SITE = {
     { label: "Waze forum profile", url: "https://www.waze.com/discuss/u/DeviateFromThePlan" },
     { label: "GitHub", url: "https://github.com/DeviateFromThePlan" },
     { label: "Discord: @edwardj00" },
+    { label: "deviatefromtheplan.waze@gmail.com", url: "mailto:deviatefromtheplan.waze@gmail.com" },
   ],
 
   // WME userscripts
