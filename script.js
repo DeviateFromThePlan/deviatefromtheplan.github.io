@@ -22,12 +22,12 @@
 
   // Stats. stats.json (pushed from WME by tools/wme-site-stats-sync.user.js) overrides data.js.
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  function renderStats(edits, points, asOf, live) {
+  function renderStats(edits, points, posts, asOf, live) {
     const days = Math.max(1, (asOf - parse(S.joined)) / 86400000);
     const stats = [
       { label: "Edits", value: edits },
       { label: "Points", value: points },
-      { label: "Forum posts", value: S.stats.forumPosts },
+      { label: "Forum posts", value: posts },
       { label: "Edits / day", value: Math.round(edits / days) },
     ];
     $("stats-grid").innerHTML = stats.map((s) =>
@@ -72,19 +72,79 @@
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((j) => {
       if (typeof j.edits !== "number") throw 0;
-      renderStats(j.edits, typeof j.points === "number" ? j.points : S.stats.points, new Date(j.updated), true);
+      const num = (v, fallback) => (typeof v === "number" ? v : fallback);
+      renderStats(j.edits, num(j.points, S.stats.points), num(j.forumPosts, S.stats.forumPosts), new Date(j.updated), true);
       if (Array.isArray(j.dailyEdits) && j.dailyEdits.length) renderActivity(j.dailyEdits, new Date(j.updated));
     })
-    .catch(() => renderStats(S.stats.edits, S.stats.points, parse(S.statsAsOf), false));
+    .catch(() => renderStats(S.stats.edits, S.stats.points, S.stats.forumPosts, parse(S.statsAsOf), false));
 
-  // Areas
+  // Areas: flag, then a mini map of the region with the managed area highlighted.
+  const KM_PER_DEG_LAT = 110.57;
+  function ringsBounds(rings) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    rings.forEach((r) => r.forEach(([x, y]) => {
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    }));
+    return { minX, minY, maxX, maxY };
+  }
+  // Approximate area in km², using a local equirectangular projection per ring.
+  function ringsAreaKm2(rings) {
+    return rings.reduce((sum, r) => {
+      const k = Math.cos((r.reduce((a, p) => a + p[1], 0) / r.length) * Math.PI / 180) * 111.32;
+      let s = 0;
+      for (let i = 0, j = r.length - 1; i < r.length; j = i++) s += (r[j][0] * k) * (r[i][1] * KM_PER_DEG_LAT) - (r[i][0] * k) * (r[j][1] * KM_PER_DEG_LAT);
+      return sum + Math.abs(s) / 2;
+    }, 0);
+  }
+  // Even-odd point-in-polygon across all rings.
+  function inRings([x, y], rings) {
+    let inside = false;
+    for (const r of rings) for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      const [xi, yi] = r[i], [xj, yj] = r[j];
+      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+  function areaMap(a) {
+    const region = (window.GEO || {})[a.region];
+    if (!region) return "";
+    const b = ringsBounds(region);
+    const kx = Math.cos(((b.minY + b.maxY) / 2) * Math.PI / 180);
+    const W = 300, pad = 8;
+    const sx = (W - pad * 2) / ((b.maxX - b.minX) * kx);
+    const H = Math.round((b.maxY - b.minY) * sx + pad * 2);
+    const path = (rings) => rings.map((r) => "M" + r.map(([x, y]) =>
+      `${((x - b.minX) * kx * sx + pad).toFixed(1)},${((b.maxY - y) * sx + pad).toFixed(1)}`).join("L") + "Z").join("");
+    const mine = a.polygon && a.polygon.length ? a.polygon : null;
+    const clipId = `clip-${esc(a.region)}`;
+    let stat = "";
+    if (mine) {
+      // AM areas include ocean, so measure only the land share: sample a grid over the area.
+      const mb = ringsBounds(mine), N = 160;
+      let inMine = 0, inBoth = 0;
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        const pt = [mb.minX + (i + 0.5) * (mb.maxX - mb.minX) / N, mb.minY + (j + 0.5) * (mb.maxY - mb.minY) / N];
+        if (inRings(pt, mine)) { inMine++; if (inRings(pt, region)) inBoth++; }
+      }
+      const km = ringsAreaKm2(mine) * (inMine ? inBoth / inMine : 0), total = ringsAreaKm2(region);
+      stat = `<div class="area-stat"><strong>${(Math.round(km / 100) * 100).toLocaleString("en-AU")} km²</strong> of land · ${(km / total * 100).toFixed(0)}% of ${esc(a.regionName)}</div>`;
+    }
+    return `<svg class="area-map" viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of ${esc(a.regionName)}${mine ? ` with ${esc(a.name)} highlighted` : ""}">
+        <defs><clipPath id="${clipId}"><path d="${path(region)}"/></clipPath></defs>
+        <path class="region" d="${path(region)}"/>
+        ${mine ? `<path class="mine" clip-path="url(#${clipId})" d="${path(mine)}"/><path class="mine-outline" d="${path(mine)}"/>` : ""}
+      </svg>${stat}`;
+  }
   $("areas-list").innerHTML = S.areas.map((a) => `
     <div class="area">
-      <span class="flag" aria-hidden="true">${a.flag}</span>
-      <div>
-        <div class="area-name">${esc(a.name)}</div>
-        <div class="muted small">${esc(a.country)} · since ${fmt(a.since, { month: "short", year: "numeric" })}</div>
+      <div class="area-head">
+        <img class="flag" src="${esc(a.flag)}" alt="${esc(a.country)} flag">
+        <div>
+          <div class="area-name">${esc(a.name)}</div>
+          <div class="muted small">${esc(a.country)} · since ${fmt(a.since, { month: "short", year: "numeric" })}</div>
+        </div>
       </div>
+      ${areaMap(a)}
     </div>`).join("");
 
   // Timeline

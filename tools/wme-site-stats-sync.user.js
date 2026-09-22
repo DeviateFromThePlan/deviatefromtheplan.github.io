@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Site Stats Sync
 // @namespace    https://github.com/DeviateFromThePlan
-// @version      1.1.0
+// @version      1.3.0
 // @description  Pushes your WME edit count to stats.json in your GitHub Pages repo, so your site stays up to date.
 // @author       DeviateFromThePlan
 // @match        https://www.waze.com/editor*
@@ -64,6 +64,37 @@
 
   const b64 = (s) => btoa(unescape(encodeURIComponent(s)));
 
+  // Same request the editor profile page makes: ask the default server, then re-ask the
+  // server you last edited on (row / il) so the numbers match your profile page.
+  async function getFullProfile(userName) {
+    const hostFor = (env) => ({ eu: 'row', world: 'row', row: 'row', israel: 'il', il: 'il' }[(env || '').toLowerCase()]);
+    const get = (prefix) => fetch(`/${prefix}Descartes/app/UserProfile/Profile?username=${encodeURIComponent(userName)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
+    try {
+      let p = await get('');
+      const host = hostFor(p.lastEditEnv);
+      if (host) p = await get(`${host}-`);
+      return p;
+    } catch (e) {
+      console.warn(TAG, 'Could not read full profile, falling back to SDK', e);
+      return null;
+    }
+  }
+
+  // Public forum directory (same origin as WME, so no CORS issue here).
+  async function getForumPosts(userName) {
+    try {
+      const r = await fetch(`/discuss/directory_items.json?period=all&order=post_count&name=${encodeURIComponent(userName)}`,
+        { headers: { Accept: 'application/json' } });
+      const j = await r.json();
+      const me = j.directory_items.find((i) => i.user.username.toLowerCase() === userName.toLowerCase());
+      return me ? me.post_count : null;
+    } catch (e) {
+      console.warn(TAG, 'Could not read forum post count', e);
+      return null;
+    }
+  }
+
   async function sync(force) {
     if (!GM_getValue('token', '')) {
       console.info(TAG, 'No GitHub token set. Use the Tampermonkey menu → "Set GitHub token".');
@@ -74,18 +105,18 @@
 
     const userName = sdk.State.getUserInfo()?.userName;
     if (!userName) return;
+    // Official SDK profile: total edits + last 90 days of daily edits.
     const profile = await sdk.DataModel.Users.getUserProfile({ userName });
-    if (!GM_getValue('loggedKeys')) {
-      console.info(TAG, 'Profile fields available:', Object.keys(profile));
-      GM_setValue('loggedKeys', true);
-    }
+    // Full editor profile (what your profile page loads): adds points and forum posts.
+    const full = await getFullProfile(userName);
 
     // dailyEditCount covers the last 90 days, oldest first, ending today.
     const daily = (profile.dailyEditCount || []).slice(-90);
     const stats = {
-      edits: profile.totalEditCount ?? profile.editCount,
-      points: profile.totalPoints ?? profile.points ?? null,
+      edits: full?.edits ?? profile.totalEditCount ?? profile.editCount,
+      points: full?.points ?? null,
       rank: profile.rank != null ? profile.rank + 1 : null,
+      forumPosts: full?.forumPosts ?? await getForumPosts(userName),
       editsLast30Days: daily.slice(-30).reduce((a, b) => a + b, 0),
       dailyEdits: daily,
       updated: new Date().toISOString(),
@@ -101,7 +132,8 @@
     if (!force && cur.status === 200) {
       try {
         const prev = JSON.parse(decodeURIComponent(escape(atob(cur.json.content.replace(/\n/g, '')))));
-        if (prev.edits === stats.edits && prev.points === stats.points && prev.updated?.slice(0, 10) === stats.updated.slice(0, 10)) {
+        if (prev.edits === stats.edits && prev.points === stats.points && prev.forumPosts === stats.forumPosts
+            && prev.updated?.slice(0, 10) === stats.updated.slice(0, 10)) {
           GM_setValue('lastPush', Date.now());
           return;
         }
